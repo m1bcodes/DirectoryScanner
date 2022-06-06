@@ -25,6 +25,8 @@
 
 #include "DirectoryScannerMock.h"
 
+const char* testDir = R"(..\Test)";
+
 TEST(DirectoryScanner, ctorNoArguments)
 {
 	CDirectoryScannerMock cds;
@@ -77,7 +79,7 @@ TEST(DirectoryScanner, ctorArguments)
 TEST(DirectoryScanner, With_Archives_Without_CRC_check)
 {
   CDirectoryScannerMock cds(false, false, { ".*" }, { "" });
-  std::filesystem::path startPath = R"(..\Test2)";
+  std::filesystem::path startPath = testDir;
   cds.scanPath(startPath.string());
 
 #ifdef _DEBUG
@@ -90,7 +92,7 @@ TEST(DirectoryScanner, With_Archives_Without_CRC_check)
 TEST(DirectoryScanner, Without_Archives_Without_CRC_check)
 {
 	CDirectoryScannerMock cds(true, false, { ".*" }, { "" });
-	std::filesystem::path startPath = R"(..\Test2)";
+	std::filesystem::path startPath = testDir;
 	cds.scanPath(startPath.string());
 
 #ifdef _DEBUG
@@ -103,7 +105,7 @@ TEST(DirectoryScanner, Without_Archives_Without_CRC_check)
 TEST(DirectoryScanner, With_Archives_With_CRC_check)
 {
 	CDirectoryScannerMock cds(false, true, { ".*" }, { "" });
-	std::filesystem::path startPath = R"(..\Test2)";
+	std::filesystem::path startPath = testDir;
 	cds.scanPath(startPath.string());
 
 #ifdef _DEBUG
@@ -124,7 +126,7 @@ TEST(DirectoryScanner, With_Archives_With_CRC_check)
 TEST(DirectoryScanner, IncludePattern)
 {
 	CDirectoryScannerMock cds(false, true, { "file_[0246]\\..*" }, { "" });
-	std::filesystem::path startPath = R"(..\Test2)";
+	std::filesystem::path startPath = testDir;
 	cds.scanPath(startPath.string());
 
 #ifdef _DEBUG
@@ -137,7 +139,7 @@ TEST(DirectoryScanner, IncludePattern)
 TEST(DirectoryScanner, ExcludePattern)
 {
 	CDirectoryScannerMock cds(false, true, { "file_\\d\\..*" }, { "file_[0246]\\..*" });
-	std::filesystem::path startPath = R"(..\Test2)";
+	std::filesystem::path startPath = testDir;
 	cds.scanPath(startPath.string());
 
 #ifdef _DEBUG
