@@ -80,5 +80,9 @@ public:
         ASSERT_EQ(excludeSpecs, m_excludeFilespecs);
     }
 
+    void test7zPath(const std::string dllPath)
+    {
+        ASSERT_EQ(dllPath, m_7zDllPath);
+    }
 };
 

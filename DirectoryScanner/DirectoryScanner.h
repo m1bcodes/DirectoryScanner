@@ -42,6 +42,7 @@ class CDirectoryScanner
 public:
 	CDirectoryScanner();
 	CDirectoryScanner(bool nozip, bool crcCheck, const std::vector<std::string>& filespecs, const std::vector<std::string>& excludeFilespecs);
+	void initialize7zDllPath();
 	~CDirectoryScanner();
 
 	void set7zDllPath(const boost::filesystem::path& path);
@@ -82,8 +83,7 @@ protected:
 
 	std::vector<std::string> m_filespecs;
 	std::vector<std::string> m_excludeFilespecs;
-
+	std::string m_7zDllPath;	//!< path to 7z.dll
 	std::unique_ptr<SevenZip::SevenZipLibrary> m_7zlib;
-	bool m_7zavailable;
 };
 

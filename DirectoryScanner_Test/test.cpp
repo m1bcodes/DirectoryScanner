@@ -36,6 +36,16 @@ TEST(DirectoryScanner, ctorNoArguments)
 	cds.testExcludeSpec({ "" });
 }
 
+
+TEST(DirectoryScanner, SevenZipDllPath)
+{
+	CDirectoryScannerMock cds;
+	const char* testDllPath = R"(c:\7zip\7z.dll)";
+	auto rest = cds.parseCommandLineArguments({ "-7", testDllPath });
+	cds.test7zPath(testDllPath);
+	ASSERT_TRUE(rest.empty());
+}
+
 TEST(DirectoryScanner, commandLineParser)
 {
 	CDirectoryScannerMock cds;
@@ -148,3 +158,4 @@ TEST(DirectoryScanner, ExcludePattern)
 
 	ASSERT_EQ(cds.scannedFileInfo.size(), 4);
 }
+

@@ -31,6 +31,7 @@
 #include <boost/crc.hpp>
 #include <boost/regex.hpp>
 #include <boost/program_options.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 
 CDirectoryScanner::CDirectoryScanner()
 	: logIndent(0)
@@ -38,8 +39,8 @@ CDirectoryScanner::CDirectoryScanner()
 	, m_crcCheck(false)
 	, m_filespecs({ ".*" })
 	, m_excludeFilespecs({""})
-	, m_7zavailable(false)
 {
+	initialize7zDllPath();
 }
 
 CDirectoryScanner::CDirectoryScanner(bool nozip, bool crcCheck, const std::vector<std::string>& filespecs, const std::vector<std::string>& excludeFilespecs)
@@ -48,12 +49,15 @@ CDirectoryScanner::CDirectoryScanner(bool nozip, bool crcCheck, const std::vecto
 	, m_crcCheck(crcCheck)
 	, m_filespecs(filespecs)
 	, m_excludeFilespecs(excludeFilespecs)
-	, m_7zavailable(false)
-
 {
-	m_7zlib = std::make_unique<SevenZip::SevenZipLibrary>();
-	if (m_7zlib->Load(R"(h:\MyFiles\vcprg\LogCrawler\7z_tester\7z.dll)"))
-		m_7zavailable = true;		
+	initialize7zDllPath();
+}
+
+void CDirectoryScanner::initialize7zDllPath()
+{
+	auto programPath = boost::dll::program_location();
+	auto dllPath = programPath.parent_path() / "7z.dll";
+	m_7zDllPath = dllPath.string();
 }
 
 CDirectoryScanner::~CDirectoryScanner()
@@ -94,12 +98,20 @@ std::unique_ptr<boost::program_options::options_description> CDirectoryScanner::
 			"do not recurse into archives files")
 		("checkcrc,c", po::value<bool>(&m_crcCheck)->zero_tokens(),
 			"Do not calculate crc of files prior to scanning and do not skip"
-			"scanning if file has already been scanned.");
+			"scanning if file has already been scanned.")
+		("7zdll,7", po::value<std::string>(&m_7zDllPath), 
+			"path to 7z.dll. If omitted 7z.dll is searched in the folder, where the executable is stored.");
 	return desc;
 }
 
 void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 {
+	if (!m_nozip) {
+		m_7zlib = std::make_unique<SevenZip::SevenZipLibrary>();
+		if (!m_7zlib->Load(m_7zDllPath))
+			throw std::runtime_error("Error loading 7z.dll from " + m_7zDllPath);
+	}
+
 	if (boost::filesystem::is_regular_file(rootPath))
 	{
 		dispatch_file(rootPath, rootPath, 0);
@@ -161,13 +173,6 @@ public:
 
 void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const boost::filesystem::path& logicalFilename, const std::string& fmtHint)
 {
-
-
-	if (!m_7zavailable) {
-		logs() << zipPath.filename() << "7z.dll not available -- skipped.\n";
-		return;
-	}
-
 	logs(logIndent) << "searching archive " << zipPath.filename() << std::endl;
 	try {
 		SevenZip::SevenZipLister lister(*m_7zlib, zipPath.string());
