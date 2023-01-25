@@ -23,6 +23,7 @@
 
 #include "pch.h"
 #include "DirectoryScannerMock.h"
+#include <fstream>
 
 void CDirectoryScannerMock::process_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc)
 {

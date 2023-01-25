@@ -27,6 +27,7 @@
 
 #include <exception>
 #include <iostream>
+#include <fstream>
 
 #include <boost/crc.hpp>
 #include <boost/regex.hpp>
@@ -131,10 +132,10 @@ void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 				dispatch_file(*rdi, rdi->path(), 0);
 			}
 			if (boost::filesystem::is_directory(*rdi)) {
-				logIndent = rdi.level();
+				logIndent = rdi.depth();
 				logs(logIndent) << "Searching directory " << rdi->path().filename() << "\n";
 				if (boost::filesystem::is_symlink(*rdi)) // 4.
-					rdi.no_push();
+					rdi.disable_recursion_pending();
 			}
 			try
 			{
@@ -145,7 +146,7 @@ void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 				logs(0) << "\nError in directory " << rdi->path() << " -- skipped: \n";
 				logs(0) << ex.what() << "\n\n";
 
-				rdi.no_push(); // 6.
+				rdi.disable_recursion_pending(); // 6.
 				++rdi;
 			}
 		}
