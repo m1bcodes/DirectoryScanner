@@ -1,0 +1,14 @@
+{
+  "FileVersion": 2,
+  "Id": "b2f62e30-8899-44e1-96e1-a9630e2d7db9",
+  "Items": [
+    {
+      "Id": "e408a834-6089-4668-a617-3a31cc1948e4",
+      "Command": "-p ..\\test"
+    },
+    {
+      "Id": "6dadab37-7053-4acb-9645-52cec117f513",
+      "Command": "--help"
+    }
+  ]
+}
