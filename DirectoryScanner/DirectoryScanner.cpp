@@ -105,6 +105,37 @@ std::unique_ptr<boost::program_options::options_description> CDirectoryScanner::
 	return desc;
 }
 
+void CDirectoryScanner::scanPathRec(const boost::filesystem::path& rootPath, int indent)
+{
+	logs(indent) << "Searching directory " << rootPath << "\n";
+
+	boost::filesystem::directory_iterator rdi(rootPath);
+	boost::filesystem::directory_iterator endIter = boost::filesystem::directory_iterator();
+
+	while (rdi != endIter) // 2.
+	{
+		try {
+			// logs << rdi.level() << ": " << rdi->path() << "\n";
+			if (boost::filesystem::is_regular_file(rdi->status())) {
+				dispatch_file(*rdi, rdi->path(), 0);
+			}
+			if (boost::filesystem::is_directory(*rdi)) {
+				if (!boost::filesystem::is_symlink(*rdi))
+				{
+					scanPathRec(rdi->path(), indent + 1);
+				}
+			}
+		}
+		catch (std::exception& ex)
+		{
+			logs(0) << "\nError in directory " << rdi->path() << " -- skipped: \n";
+			logs(0) << ex.what() << "\n\n";
+		}
+		rdi++;
+	}
+}
+
+
 void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 {
 	if (!m_nozip) {
@@ -119,37 +150,7 @@ void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 	}
 	else
 	{
-
-		boost::filesystem::recursive_directory_iterator rdi(rootPath);
-		boost::filesystem::recursive_directory_iterator endIter = boost::filesystem::recursive_directory_iterator();
-
-		// it seems like boost:recursive... is pretty much messed up.
-		// http://thisthread.blogspot.de/2011/07/using-recursivedirectoryiterator.html
-		while (rdi != endIter) // 2.
-		{
-			// logs << rdi.level() << ": " << rdi->path() << "\n";
-			if (boost::filesystem::is_regular_file(rdi->status())) {
-				dispatch_file(*rdi, rdi->path(), 0);
-			}
-			if (boost::filesystem::is_directory(*rdi)) {
-				logIndent = rdi.depth();
-				logs(logIndent) << "Searching directory " << rdi->path().filename() << "\n";
-				if (boost::filesystem::is_symlink(*rdi)) // 4.
-					rdi.disable_recursion_pending();
-			}
-			try
-			{
-				++rdi; // 5.
-			}
-			catch (std::exception & ex)
-			{
-				logs(0) << "\nError in directory " << rdi->path() << " -- skipped: \n";
-				logs(0) << ex.what() << "\n\n";
-
-				rdi.disable_recursion_pending(); // 6.
-				++rdi;
-			}
-		}
+		scanPathRec(rootPath, 0);
 	}
 }
 

@@ -58,6 +58,7 @@ public:
 	virtual void process_7z(const boost::filesystem::path& zipPath, const boost::filesystem::path& logicalFilename, const std::string& fmtHint);
 
 protected:
+	void scanPathRec(const boost::filesystem::path& rootPath, int indent);
 
 	enum EEngine
 	{
