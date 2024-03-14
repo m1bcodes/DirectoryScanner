@@ -350,3 +350,5 @@ MigrationBackup/
 .ionide/
 /7z.dll
 /DirectoryScanner/7z.dll
+/Intermediate/Win32/Unicode Debug
+/Lib/Win32/7zpp_ud.lib
