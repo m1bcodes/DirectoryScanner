@@ -1,6 +1,6 @@
 //MIT License
 //
-//Copyright(c) 2017-2022 mibcoder
+//Copyright(c) 2017-2024 m1bcodes
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
 //of this software and associated documentation files(the "Software"), to deal
@@ -28,6 +28,7 @@
 #include <exception>
 #include <iostream>
 #include <fstream>
+#include <random>
 
 #include <boost/crc.hpp>
 #include <boost/regex.hpp>
@@ -105,22 +106,22 @@ std::unique_ptr<boost::program_options::options_description> CDirectoryScanner::
 	return desc;
 }
 
-void CDirectoryScanner::scanPathRec(const boost::filesystem::path& rootPath, int indent)
+void CDirectoryScanner::scanPathRec(const std::filesystem::path& rootPath, int indent)
 {
 	logs(indent) << "Searching directory " << rootPath << "\n";
 
-	boost::filesystem::directory_iterator rdi(rootPath);
-	boost::filesystem::directory_iterator endIter = boost::filesystem::directory_iterator();
+	std::filesystem::directory_iterator rdi(rootPath);
+	std::filesystem::directory_iterator endIter = std::filesystem::directory_iterator();
 
 	while (rdi != endIter) // 2.
 	{
 		try {
 			// logs << rdi.level() << ": " << rdi->path() << "\n";
-			if (boost::filesystem::is_regular_file(rdi->status())) {
+			if (std::filesystem::is_regular_file(rdi->status())) {
 				dispatch_file(*rdi, rdi->path(), 0);
 			}
-			if (boost::filesystem::is_directory(*rdi)) {
-				if (!boost::filesystem::is_symlink(*rdi))
+			if (std::filesystem::is_directory(*rdi)) {
+				if (!std::filesystem::is_symlink(*rdi))
 				{
 					scanPathRec(rdi->path(), indent + 1);
 				}
@@ -136,7 +137,7 @@ void CDirectoryScanner::scanPathRec(const boost::filesystem::path& rootPath, int
 }
 
 
-void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
+void CDirectoryScanner::scanPath(const std::filesystem::path& rootPath)
 {
 	if (!m_nozip) {
 		m_7zlib = std::make_unique<SevenZip::SevenZipLibrary>();
@@ -144,7 +145,7 @@ void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 			throw std::runtime_error("Error loading 7z.dll from " + m_7zDllPath);
 	}
 
-	if (boost::filesystem::is_regular_file(rootPath))
+	if (std::filesystem::is_regular_file(rootPath))
 	{
 		dispatch_file(rootPath, rootPath, 0);
 	}
@@ -154,7 +155,7 @@ void CDirectoryScanner::scanPath(const boost::filesystem::path& rootPath)
 	}
 }
 
-void CDirectoryScanner::process_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc)
+void CDirectoryScanner::process_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc)
 {
 }
 
@@ -173,7 +174,7 @@ public:
 	std::vector<SevenZip::intl::FileInfo>& m_fileInfos;
 };
 
-void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const boost::filesystem::path& logicalFilename, const std::string& fmtHint)
+void CDirectoryScanner::process_7z(const std::filesystem::path& zipPath, const std::filesystem::path& logicalFilename, const std::string& fmtHint)
 {
 	logs(logIndent) << "searching archive " << zipPath.filename() << std::endl;
 	try {
@@ -211,16 +212,16 @@ void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const
 			logs() << "Entry " << i << ": " << fi.FileName << " " << (fi.IsDirectory ? "<DIR>" : "") << " " << std::hex << fi.crc << "\n";
 			if (fi.IsDirectory) continue;
 
-			boost::filesystem::path pathInZip = fi.FileName;
-			boost::filesystem::path fileInZip = pathInZip.filename();
+			std::filesystem::path pathInZip = fi.FileName;
+			std::filesystem::path fileInZip = pathInZip.filename();
 			size_t fileSize = fi.Size;
 			std::string fmtHint;
 			EEngine eng = chooseEngine(fileInZip, fmtHint);
 			if (eng != engUnknown) {
 				if (!m_crcCheck || fi.crc == 0 || crcSet.find(fi.crc) == crcSet.end())
 				{
-					boost::filesystem::path tempPath = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-					boost::filesystem::create_directories(tempPath);
+					std::filesystem::path tempPath = std::filesystem::temp_directory_path() / generate_unique_path();
+					std::filesystem::create_directories(tempPath);
 
 					logs(logIndent) << "extracting file " << fileInZip << "\n";
 
@@ -231,7 +232,7 @@ void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const
 					extractor.ExtractFilesFromArchive(&index, 1, tempPath.string());
 
 					try {
-						boost::filesystem::path tempFilePath = tempPath / fi.FileName;
+						std::filesystem::path tempFilePath = tempPath / fi.FileName;
 						dispatch_file(tempFilePath, logicalFilename / pathInZip.string(), fi.crc);
 						crcSet.insert(fi.crc);
 					}
@@ -239,7 +240,7 @@ void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const
 					{
 						std::cerr << "Error processing file from archive: " << ex.what() << "\n";
 					}
-					boost::filesystem::remove_all(tempPath);
+					std::filesystem::remove_all(tempPath);
 				}
 				else
 				{
@@ -256,7 +257,7 @@ void CDirectoryScanner::process_7z(const boost::filesystem::path& zipPath, const
 	}
 }
 
-inline void CDirectoryScanner::dispatch_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc)
+inline void CDirectoryScanner::dispatch_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc)
 {
 	std::string fmtHint;
 	EEngine engine = chooseEngine(logicalFilename, fmtHint);
@@ -275,7 +276,7 @@ inline void CDirectoryScanner::dispatch_file(const boost::filesystem::path& p, c
 	logIndent--;
 }
 
-CDirectoryScanner::EEngine CDirectoryScanner::chooseEngine(const boost::filesystem::path& p, std::string& fmtHint)
+CDirectoryScanner::EEngine CDirectoryScanner::chooseEngine(const std::filesystem::path& p, std::string& fmtHint)
 {
 
 	boost::smatch what;
@@ -345,7 +346,7 @@ CDirectoryScanner::EEngine CDirectoryScanner::chooseEngine(const boost::filesyst
 		return engUnknown;
 }
 
-bool CDirectoryScanner::fileHasNewCrcOrNotChecked(const boost::filesystem::path& p, crc_t& crc)
+bool CDirectoryScanner::fileHasNewCrcOrNotChecked(const std::filesystem::path& p, crc_t& crc)
 {
 	if (m_crcCheck) {
 		if (crc == 0) {
@@ -390,6 +391,34 @@ CDirectoryScanner::crc_t CDirectoryScanner::calculate_crc32(std::string filename
 	delete[] buf;
 	logs() << std::hex << crc.checksum() << std::dec << "\n";
 	return crc.checksum();
+}
+
+inline std::filesystem::path CDirectoryScanner::generate_unique_path(const std::filesystem::path& base_dir) 
+{
+	// Use the current time as a seed for random number generation
+	auto now = std::chrono::system_clock::now();
+	auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+
+	std::mt19937 generator(static_cast<unsigned int>(seed));
+	std::uniform_int_distribution<int> distribution(0, 15);
+	auto random_char = []() -> char {
+		static const char characters[] = "0123456789abcdef";
+		static std::mt19937 generator(std::random_device{}());
+		static std::uniform_int_distribution<int> distribution(0, 15);
+		return characters[distribution(generator)];
+		};
+
+	// Generate a unique filename by checking if the file already exists
+	std::filesystem::path unique_path;
+	do {
+		std::string random_filename(16, '\0');
+		for (char& c : random_filename) {
+			c = random_char();
+		}
+		unique_path = base_dir / random_filename;
+	} while (std::filesystem::exists(unique_path));
+
+	return unique_path;
 }
 
 std::ostream& CDirectoryScanner::logs(int indent)

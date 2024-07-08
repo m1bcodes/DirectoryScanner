@@ -1,6 +1,6 @@
 //MIT License
 //
-//Copyright(c) 2022 m1bcodes
+//Copyright(c) 2022-2024 m1bcodes
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
 //of this softwareand associated documentation files(the "Software"), to deal
@@ -25,7 +25,7 @@
 #include "DirectoryScannerMock.h"
 #include <fstream>
 
-void CDirectoryScannerMock::process_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc)
+void CDirectoryScannerMock::process_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc)
 {
     std::cout << "processFile: path:" << p << ", filename: " << logicalFilename << ", crc: " << crc << "\n";
     FileRecord fr;

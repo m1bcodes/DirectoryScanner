@@ -1,6 +1,6 @@
 //MIT License
 //
-//Copyright(c) 2017-2022 mibcoder
+//Copyright(c) 2017-2024 m1bcodes
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
 //of this software and associated documentation files(the "Software"), to deal
@@ -25,7 +25,7 @@
 
 #include <ostream>
 #include <set>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace SevenZip {
 	class SevenZipLibrary;
@@ -45,7 +45,7 @@ public:
 	void initialize7zDllPath();
 	~CDirectoryScanner();
 
-	void set7zDllPath(const boost::filesystem::path& path);
+	void set7zDllPath(const std::filesystem::path& path);
 
 	//! parse command line arguments and return unmatched stuff
 	std::vector<std::string> parseCommandLineArguments(const std::vector<std::string>& arguments);
@@ -53,12 +53,12 @@ public:
 
 	typedef unsigned int crc_t;
 
-	virtual void scanPath(const boost::filesystem::path& rootPath);
-	virtual void process_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc);
-	virtual void process_7z(const boost::filesystem::path& zipPath, const boost::filesystem::path& logicalFilename, const std::string& fmtHint);
+	virtual void scanPath(const std::filesystem::path& rootPath);
+	virtual void process_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc);
+	virtual void process_7z(const std::filesystem::path& zipPath, const std::filesystem::path& logicalFilename, const std::string& fmtHint);
 
 protected:
-	void scanPathRec(const boost::filesystem::path& rootPath, int indent);
+	void scanPathRec(const std::filesystem::path& rootPath, int indent);
 
 	enum EEngine
 	{
@@ -67,11 +67,11 @@ protected:
 		eng7z
 	};
 
-	void dispatch_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc);
-	EEngine chooseEngine(const boost::filesystem::path& p, std::string& fmtHint);
-	bool fileHasNewCrcOrNotChecked(const boost::filesystem::path& p, crc_t& knownCrc);
+	void dispatch_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc);
+	EEngine chooseEngine(const std::filesystem::path& p, std::string& fmtHint);
+	bool fileHasNewCrcOrNotChecked(const std::filesystem::path& p, crc_t& knownCrc);
 	crc_t calculate_crc32(std::string filename);
-
+	std::filesystem::path generate_unique_path(const std::filesystem::path& base_dir = std::filesystem::temp_directory_path());
 	virtual std::ostream& logs(int indent = 0);
 
 	int logIndent;

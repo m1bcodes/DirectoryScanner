@@ -11,7 +11,7 @@
 
 class FileLister : public CDirectoryScanner
 {
-	virtual void process_file(const boost::filesystem::path& p, const boost::filesystem::path& logicalFilename, crc_t crc) override
+	virtual void process_file(const std::filesystem::path& p, const std::filesystem::path& logicalFilename, crc_t crc) override
 	{
 		std::cout << "\n";
 		std::cout << p << "\n";
